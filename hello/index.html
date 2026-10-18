@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ハロー！ボタン</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center;
+         gap: 24px; background: #e7f5ff; transition: background .3s; text-align: center; padding: 16px; box-sizing: border-box; }
+  #msg { font-size: 1.8em; font-weight: bold; min-height: 2.4em; color: #333; }
+  #btn { width: 70vw; max-width: 320px; aspect-ratio: 1; border: none; border-radius: 50%; font-size: 2.2em; font-weight: bold;
+         color: #fff; background: #ff6b6b; box-shadow: 0 10px 0 #c92a2a; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #btn:active { transform: translateY(8px); box-shadow: 0 2px 0 #c92a2a; }
+  #count { font-size: 1.4em; color: #555; }
+  a { color: #1c7ed6; font-size: 1.1em; }
+</style>
+</head>
+<body>
+  <div id="msg">ボタンをおしてね！</div>
+  <button id="btn">おして！</button>
+  <div id="count">0 かい おしたよ</div>
+  <a href="../">← アプリいちらんにもどる</a>
+<script>
+  const messages = ["やったね！🎉", "すごい！⭐", "ナイス！👍", "かっこいい！😎", "天才だ！🧠", "もういっかい！🔁",
+                    "ラッキー！🍀", "パワーアップ！💪", "にっこり！😊", "ロケット発射！🚀"];
+  const colors = ["#ff6b6b", "#f59f00", "#51cf66", "#339af0", "#845ef7", "#f06595", "#20c997"];
+  const bgs = ["#e7f5ff", "#fff9db", "#ebfbee", "#f3f0ff", "#fff0f6", "#fff4e6"];
+  let n = 0;
+  const btn = document.getElementById("btn");
+  btn.addEventListener("click", () => {
+    n++;
+    document.getElementById("msg").textContent = messages[Math.floor(Math.random() * messages.length)];
+    document.getElementById("count").textContent = n + " かい おしたよ";
+    btn.style.background = colors[Math.floor(Math.random() * colors.length)];
+    document.body.style.background = bgs[Math.floor(Math.random() * bgs.length)];
+    if (navigator.vibrate) navigator.vibrate(30);
+  });
+</script>
+</body>
+</html>
