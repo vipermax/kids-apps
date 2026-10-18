@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#ffd43b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>にほんのルール ○×クイズ</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; touch-action: manipulation; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+    background: linear-gradient(160deg, #ffe066 0%, #ffa8a8 55%, #a5d8ff 100%);
+    color: #343a40; user-select: none; word-break: keep-all; overflow-wrap: anywhere; line-break: strict; -webkit-user-select: none;
+  }
+  rt { font-size: 0.5em; color: #868e96; }
+  .app { height: 100vh; height: 100dvh; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto;
+         padding: max(10px, env(safe-area-inset-top)) 14px max(10px, env(safe-area-inset-bottom)); }
+  .screen { flex: 1; display: none; flex-direction: column; min-height: 0; }
+  .screen.on { display: flex; }
+  .top { display: flex; justify-content: space-between; align-items: center; font-size: clamp(13px, 3.6vw, 16px); }
+  .top a { color: #fff; text-decoration: none; font-weight: bold; background: rgba(0,0,0,.18); padding: 6px 12px; border-radius: 99px; }
+  .btn { border: 0; border-radius: 22px; font-family: inherit; font-weight: bold; color: #fff; cursor: pointer;
+         box-shadow: 0 6px 0 rgba(0,0,0,.2); transition: transform .08s; }
+  .btn:active { transform: translateY(5px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .big { font-size: clamp(22px, 6.5vw, 30px); padding: clamp(12px, 2.6vh, 20px) 20px; width: 100%; }
+  .green { background: #40c057; } .blue { background: #339af0; } .orange { background: #fd7e14; }
+
+  /* start */
+  #start { justify-content: space-between; text-align: center; }
+  .title-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: clamp(6px, 1.6vh, 14px); }
+  .flag { font-size: clamp(56px, 13vh, 110px); animation: float 2.4s ease-in-out infinite; line-height: 1; }
+  h1 { margin: 0; font-size: clamp(28px, 8.5vw, 40px); color: #fff; text-shadow: 0 3px 0 #e8590c, 0 0 14px rgba(0,0,0,.15); line-height: 1.25; }
+  h1 .mb { display: inline-block; background: #fff; color: #e64980; border-radius: 16px; padding: 0 12px; text-shadow: none; margin-top: 6px; }
+  .lead { background: rgba(255,255,255,.85); border-radius: 18px; padding: clamp(8px, 1.6vh, 14px) 16px; font-size: clamp(15px, 4.3vw, 19px); line-height: 1.7; }
+  .emojirow { font-size: clamp(26px, 6vh, 40px); letter-spacing: 6px; }
+
+  /* quiz */
+  .progress { display: flex; gap: 5px; justify-content: center; margin: clamp(6px, 1.4vh, 12px) 0; }
+  .dot { width: clamp(18px, 6vw, 26px); height: clamp(18px, 6vw, 26px); border-radius: 50%; background: rgba(255,255,255,.55);
+         display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 3vw, 14px); font-weight: bold; color: #fff; transition: all .3s; }
+  .dot.now { background: #fff; color: #e64980; transform: scale(1.2); box-shadow: 0 0 0 3px #f783ac; }
+  .dot.ok { background: #40c057; } .dot.ng { background: #fa5252; }
+  .card { flex: 1; min-height: 0; background: #fff; border-radius: 28px; box-shadow: 0 8px 0 rgba(0,0,0,.12);
+          display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+          padding: clamp(10px, 2vh, 20px) 16px; position: relative; overflow: hidden; }
+  .qno { font-size: clamp(14px, 4vw, 18px); color: #f06595; font-weight: bold; }
+  .qemoji { font-size: clamp(56px, 13vh, 110px); line-height: 1.1; margin: clamp(4px, 1vh, 10px) 0; }
+  .qtext { font-size: clamp(19px, 5.6vw, 26px); font-weight: bold; line-height: 1.75; }
+  .answers { display: flex; gap: 14px; margin-top: clamp(10px, 2vh, 18px); height: clamp(96px, 19vh, 160px); }
+  .answers .btn { flex: 1; font-size: clamp(60px, 13vh, 110px); line-height: 1; padding: 0; border-radius: 28px; }
+  .maru { background: #ff6b6b; } .batsu { background: #4dabf7; }
+  .answers.hide { display: none; }
+
+  /* feedback */
+  .fb { display: none; flex-direction: column; gap: clamp(8px, 1.6vh, 14px); margin-top: clamp(10px, 2vh, 18px); }
+  .fb.on { display: flex; }
+  .fbcard { border-radius: 24px; padding: clamp(8px, 1.6vh, 14px) 14px; text-align: center; color: #fff; }
+  .fbcard.ok { background: #40c057; animation: pop .5s; } .fbcard.ng { background: #fa5252; animation: shake .5s; }
+  .fbtitle { font-size: clamp(24px, 7vw, 34px); font-weight: bold; }
+  .fbans { font-size: clamp(14px, 4vw, 18px); }
+  .fbexp { font-size: clamp(15px, 4.3vw, 19px); line-height: 1.7; background: rgba(255,255,255,.95); color: #343a40; border-radius: 14px; padding: 6px 10px; margin-top: 6px; }
+  .fb .btn { font-size: clamp(20px, 6vw, 28px); padding: clamp(10px, 2vh, 16px); }
+  .card.ok { animation: bounce .6s; } .card.ng { animation: shake .5s; }
+
+  /* result */
+  #result { text-align: center; justify-content: space-between; }
+  .rbox { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: clamp(6px, 1.4vh, 12px);
+          background: #fff; border-radius: 28px; margin: 10px 0; padding: 12px; box-shadow: 0 8px 0 rgba(0,0,0,.12); min-height: 0; }
+  .remoji { font-size: clamp(64px, 15vh, 120px); line-height: 1.1; animation: pop .8s; }
+  .score { font-size: clamp(20px, 6vw, 28px); font-weight: bold; }
+  .score b { font-size: 2em; color: #e64980; }
+  .rank { font-size: clamp(22px, 6.5vw, 30px); font-weight: bold; color: #fd7e14; }
+  .rmsg { font-size: clamp(15px, 4.3vw, 19px); line-height: 1.7; }
+  .stars { font-size: clamp(22px, 6vw, 30px); letter-spacing: 2px; }
+  .rbtns { display: flex; flex-direction: column; gap: 12px; }
+  .link { display: block; text-align: center; color: #fff; font-weight: bold; font-size: clamp(14px, 4vw, 17px); text-decoration: none; padding: 6px; }
+
+  /* confetti */
+  .confetti { position: fixed; top: -20px; width: 10px; height: 14px; pointer-events: none; z-index: 9; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: .7; } }
+  @keyframes float { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-12px) rotate(4deg); } }
+  @keyframes pop { 0% { transform: scale(.3); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 30% { transform: translateY(-14px); } 60% { transform: translateY(4px); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-10px); } 40%,80% { transform: translateX(10px); } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <section class="screen on" id="start">
+    <div class="top"><a href="../">← アプリいちらん</a><span></span></div>
+    <div class="title-box">
+      <div class="flag">🗾</div>
+      <h1>にほんの ルール<br><span class="mb">⭕❌ クイズ</span></h1>
+      <div class="emojirow">👟🚃🍜♨️</div>
+      <div class="lead">
+        <ruby>日本<rt>にほん</rt></ruby>の くらしの ルールを<br>クイズで おぼえよう！<br>
+        ぜんぶで <b>10もん</b> だよ。
+      </div>
+    </div>
+    <button class="btn big green" id="startBtn">▶ スタート！</button>
+  </section>
+
+  <section class="screen" id="quiz">
+    <div class="top"><a href="../">← いちらん</a><span id="scoreNow">⭐ 0</span></div>
+    <div class="progress" id="progress"></div>
+    <div class="card" id="card">
+      <div class="qno" id="qno">だい1もん</div>
+      <div class="qemoji" id="qemoji">👟</div>
+      <div class="qtext" id="qtext"></div>
+    </div>
+    <div class="answers" id="answers">
+      <button class="btn maru" data-a="1" aria-label="まる">⭕</button>
+      <button class="btn batsu" data-a="0" aria-label="ばつ">❌</button>
+    </div>
+    <div class="fb" id="fb">
+      <div class="fbcard" id="fbcard">
+        <div class="fbtitle" id="fbtitle"></div>
+        <div class="fbans" id="fbans"></div>
+        <div class="fbexp" id="fbexp"></div>
+      </div>
+      <button class="btn orange" id="nextBtn">つぎへ ▶</button>
+    </div>
+  </section>
+
+  <section class="screen" id="result">
+    <div class="top"><a href="../">← いちらん</a><span></span></div>
+    <div class="rbox">
+      <div class="remoji" id="remoji">🏆</div>
+      <div class="score">10もん<ruby>中<rt>ちゅう</rt></ruby> <b id="rscore">0</b>もん せいかい！</div>
+      <div class="stars" id="stars"></div>
+      <div class="rank" id="rank"></div>
+      <div class="rmsg" id="rmsg"></div>
+    </div>
+    <div class="rbtns">
+      <button class="btn big blue" id="againBtn">🔁 もういちど</button>
+      <a class="link" href="../">🏠 アプリいちらんへ もどる</a>
+    </div>
+  </section>
+
+</div>
+<script>
+// {漢字|よみ} → ルビ
+const R = s => s.replace(/\{([^|}]+)\|([^}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
+
+// a: 1 = ⭕ / 0 = ❌
+const POOL = [
+  { e: '👟', q: '{家|いえ}に {入|はい}るとき、くつを ぬぐ。', a: 1, x: '{家|いえ}の {中|なか}は くつを ぬいで すごすよ。' },
+  { e: '📱', q: 'でんしゃの {中|なか}で、{大|おお}きい こえで でんわを しても いい。', a: 0, x: 'でんしゃの {中|なか}では でんわは しないで、しずかに しよう。' },
+  { e: '💴', q: 'レストランでは、チップを わたす。', a: 0, x: '{日本|にほん}では チップは いらないよ。' },
+  { e: '🗑️', q: 'ごみは しゅるいで わけて、きまった {日|ひ}に だす。', a: 1, x: 'もえる ごみ、プラスチックなど、わけて だすよ。' },
+  { e: '🚗', q: '{日本|にほん}では、{車|くるま}は みちの ひだりがわを はしる。', a: 1, x: '{車|くるま}は ひだりがわ。わたる ときは {右|みぎ}も {左|ひだり}も よく みてね。' },
+  { e: '🍚', q: 'ごはんに おはしを たてて さしても いい。', a: 0, x: 'おはしを ごはんに たてるのは よくない マナーだよ。' },
+  { e: '♨️', q: 'おんせんでは、からだを あらってから おゆに はいる。', a: 1, x: 'さきに からだを あらうのが ルールだよ。' },
+  { e: '🧺', q: 'おんせんの おゆに タオルを いれても いい。', a: 0, x: 'タオルは おゆに いれないよ。あたまの {上|うえ}に のせる {人|ひと}も いるよ。' },
+  { e: '🍜', q: 'ラーメンを ズズッと おとを たてて たべても いい。', a: 1, x: 'めんを すする おとは だいじょうぶ。' },
+  { e: '🚦', q: 'しんごうが {赤|あか}でも、{車|くるま}が いなければ わたって いい。', a: 0, x: '{赤|あか}は とまれ！ {青|あお}に なるまで まとう。' },
+  { e: '🚑', q: 'きゅうきゅうしゃを よぶ でんわばんごうは「119」。', a: 1, x: 'けがや びょうきで たいへんな ときは 119 だよ。' },
+  { e: '👮', q: 'けいさつを よぶ でんわばんごうは「119」。', a: 0, x: 'けいさつは「110」だよ。' },
+  { e: '🚮', q: '{日本|にほん}の まちには、ごみばこが たくさん ある。', a: 0, x: 'ごみばこは すくないよ。ごみは {家|いえ}に もって かえろう。' },
+  { e: '🚽', q: 'トイレットペーパーは、トイレに ながす。', a: 1, x: '{日本|にほん}の トイレは かみを ながして だいじょうぶ。' },
+  { e: '🍺', q: '{日本|にほん}では、18さいに なったら おさけを のんで いい。', a: 0, x: 'おさけは 20さいに なってから だよ。' },
+  { e: '🙇', q: 'あいさつの とき、おじぎを する ことが ある。', a: 1, x: 'あたまを さげて「こんにちは」。おじぎは {日本|にほん}の あいさつだよ。' },
+  { e: '🚲', q: 'じてんしゃは、みちの みぎがわを はしる。', a: 0, x: 'じてんしゃも {車|くるま}と おなじで ひだりがわを はしるよ。' },
+  { e: '🧍', q: 'えきで でんしゃを まつ ときは、ならんで まつ。', a: 1, x: 'じゅんばんに ならんで、おりる {人|ひと}が さきだよ。' },
+  { e: '💺', q: 'でんしゃの「ゆうせんせき」は、おとしよりなどに ゆずる せき。', a: 1, x: 'こまって いる {人|ひと}に せきを ゆずろう。' },
+  { e: '💧', q: 'レストランの おみずは、ただ（むりょう）の ことが おおい。', a: 1, x: 'おみずや おちゃは ただの お{店|みせ}が おおいよ。' },
+  { e: '🏥', q: 'きゅうきゅうしゃを よぶと、おかねが かかる。', a: 0, x: '{日本|にほん}では きゅうきゅうしゃは ただだよ。でも ほんとうに ひつような ときだけ よぼう。' },
+];
+
+const N = 10;
+let qs = [], idx = 0, score = 0, results = [];
+const $ = id => document.getElementById(id);
+const show = id => { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); };
+
+let ac;
+function beep(freqs, dur = 0.12, type = 'sine') {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i * dur;
+      o.type = type; o.frequency.value = f; o.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.start(t); o.stop(t + dur);
+    });
+  } catch (e) {}
+}
+const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+function confetti(n = 40) {
+  const colors = ['#ff6b6b','#ffd43b','#51cf66','#339af0','#cc5de8','#ff922b'];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (1.2 + Math.random() * 1.3) + 's';
+    c.style.animationDelay = (Math.random() * 0.3) + 's';
+    c.style.borderRadius = Math.random() < .5 ? '50%' : '2px';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+}
+
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function startGame() {
+  qs = shuffle(POOL).slice(0, N); idx = 0; score = 0; results = [];
+  beep([523, 659, 784]);
+  show('quiz'); render();
+}
+
+function renderDots() {
+  $('progress').innerHTML = qs.map((_, i) => {
+    const cls = i < results.length ? (results[i] ? 'ok' : 'ng') : (i === idx ? 'now' : '');
+    const t = i < results.length ? (results[i] ? '○' : '×') : i + 1;
+    return `<div class="dot ${cls}">${t}</div>`;
+  }).join('');
+}
+
+function render() {
+  const q = qs[idx];
+  $('qno').textContent = `だい${idx + 1}もん`;
+  $('qemoji').textContent = q.e;
+  $('qtext').innerHTML = R(q.q);
+  $('scoreNow').textContent = '⭐ ' + score;
+  $('card').className = 'card';
+  $('card').style.display = '';
+  $('answers').classList.remove('hide');
+  $('fb').classList.remove('on');
+  renderDots();
+}
+
+function answer(a) {
+  const q = qs[idx], ok = a === q.a;
+  results.push(ok); if (ok) score++;
+  $('answers').classList.add('hide');
+  $('fbcard').className = 'fbcard ' + (ok ? 'ok' : 'ng');
+  $('fbtitle').textContent = ok ? '🎉 せいかい！' : '😢 ざんねん…';
+  $('fbans').textContent = 'こたえは ' + (q.a ? '⭕（まる）' : '❌（ばつ）');
+  $('fbexp').innerHTML = R(q.x);
+  $('nextBtn').textContent = idx === N - 1 ? 'けっかを みる 🏁' : 'つぎへ ▶';
+  $('fb').classList.add('on');
+  $('card').className = 'card ' + (ok ? 'ok' : 'ng');
+  $('scoreNow').textContent = '⭐ ' + score;
+  renderDots();
+  if (ok) { confetti(); beep([784, 1047]); buzz(40); }
+  else { beep([300, 220], 0.18, 'triangle'); buzz([60, 40, 60]); }
+}
+
+function next() {
+  idx++;
+  if (idx < N) { render(); beep([660], 0.06); }
+  else finish();
+}
+
+function finish() {
+  const s = score;
+  const ranks = [
+    [10, '🏆', 'にほんの ルール はかせ！', 'ぜんもん せいかい！ すごすぎる！'],
+    [8, '🥇', 'にほん マスター！', 'とても よく しって いるね！'],
+    [6, '🥈', 'いい ちょうし！', 'あと すこしで マスターだよ！'],
+    [4, '🥉', 'がんばったね！', 'もういちど やると もっと わかるよ。'],
+    [0, '🌱', 'いっしょに おぼえよう！', 'まちがえても だいじょうぶ。もういちど チャレンジ！'],
+  ];
+  const r = ranks.find(r => s >= r[0]);
+  $('rscore').textContent = s;
+  $('remoji').textContent = r[1];
+  $('rank').textContent = r[2];
+  $('rmsg').textContent = r[3];
+  $('stars').textContent = '⭐'.repeat(Math.round(s / 2)) + '☆'.repeat(5 - Math.round(s / 2));
+  show('result');
+  if (s >= 6) { confetti(80); beep([523, 659, 784, 1047], 0.14); } else beep([440, 523], 0.15);
+}
+
+$('startBtn').onclick = startGame;
+$('againBtn').onclick = startGame;
+$('nextBtn').onclick = next;
+document.querySelectorAll('#answers .btn').forEach(b => b.onclick = () => answer(+b.dataset.a));
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+</script>
+</body>
+</html>
